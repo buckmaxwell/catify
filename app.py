@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from psycopg2.extras import Json
 from requests.auth import HTTPBasicAuth
 import arrow
 import os
@@ -9,6 +10,11 @@ SPOTIFY_CLIENT_ID = os.environ['SPOTIFY_CLIENT_ID']
 SPOTIFY_CLIENT_SECRET = os.environ['SPOTIFY_CLIENT_SECRET']
 SPOTIFY_STATE = 'prevent_cross_site_request_forgery55'
 SPOTIFY_REDIRECT_URI = 'http://167.99.7.55:5000/spotify'
+DB_NAME = os.environ['DB_NAME']
+DB_USER = os.environ['DB_USER']
+DB_PASS = os.environ['DB_PASS']
+DB_HOST = os.environ['DB_HOST']
+DB_PORT = os.environ['DB_PORT']
 
 SPOTIFY_API_SCOPES = [
         'playlist-modify-private',
@@ -23,6 +29,24 @@ SPOTIFY_API_SCOPES = [
 
 app = Flask(__name__)
 
+
+conn = psycopg2.connect(
+        dbname=DB_NAME,
+        user=DB_USER,
+        password=DB_PASS,
+        host=DB_HOST,
+        port=DB_PORT)
+
+
+def spotify_find_or_create_user(access_token):
+    resp = requests.get('https://api.spotify.com/v1/me',
+            headers={'Authorization': 'Bearer {}'.format(
+                access_token)})
+    email = resp.json['email']
+    account_type = 'spotify'
+    cur = conn.cursor()
+    # TODO: pick up here
+    cur.execute("select ...")
 
 
 
@@ -40,8 +64,7 @@ def spotify_request_tokens(code):
         scope = resp.json['scope']
         expires = arrow.now().shift(resp.json['expires_in'])
         refresh = resp.json['refresh_token']
-        # TODO: pick up here
-        spotify_get_user_profile(access_token)
+        spotify_find_or_create_user(access_token)
     else:
         pass
 
