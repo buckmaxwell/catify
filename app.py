@@ -66,6 +66,11 @@ def spotify_find_or_create_user(access_token, refresh_token, access_expiration):
     cur.execute("select cookie from catify.users where email = %s", (email,))
     user_cookie_row = cur.fetchone()
     if user_cookie_row:
+        cur.execute("update catify.users set ( access_token,"
+            " refresh_token, access_token_expiration, profile) = (%s,"
+            " %s, %s, %s)", ( access_token,
+                refresh_token, access_expiration, Json(profile) ))
+        conn.commit()
         return user_cookie_row[0]
     cur.execute("insert into catify.users (id, email, account_type, access_token,"
             " refresh_token, access_token_expiration, profile) values (default, %s,"
