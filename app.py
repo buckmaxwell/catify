@@ -1,10 +1,13 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, redirect, make_response
+from functools import wraps
 from psycopg2.extras import Json
 from requests.auth import HTTPBasicAuth
 import arrow
 import os
 import psycopg2
 import requests
+import urllib
+import auth
 
 SPOTIFY_CLIENT_ID = os.environ['SPOTIFY_CLIENT_ID']
 SPOTIFY_CLIENT_SECRET = os.environ['SPOTIFY_CLIENT_SECRET']
@@ -23,6 +26,7 @@ SPOTIFY_API_SCOPES = [
         'playlist-read-private',
         'user-library-modify',
         'user-library-read',
+        'user-read-email',
         'user-read-recently-played',
         'user-top-read',
         ]
@@ -38,24 +42,39 @@ conn = psycopg2.connect(
         port=DB_PORT)
 
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        cookie = request.cookies.get('catify0')
+        if auth.login_user_from_cookie(conn, cookie):
+            return f(*args, **kwargs)
+        return redirect('/spotify-login', code=302)
+    return decorated_function
+
+
 def spotify_find_or_create_user(access_token, refresh_token, access_expiration):
     resp = requests.get('https://api.spotify.com/v1/me',
             headers={'Authorization': 'Bearer {}'.format(
                 access_token)})
-    email = resp.json['email']
+    if resp.status_code != 200:
+        return 'There was a problem :(' 
+
+    email = resp.json()['email']
     account_type = 'spotify'
-    profile = resp.json
+    profile = resp.json()
     cur = conn.cursor()
-    cur.execute("select id from catify.users where email = %s", (email,))
-    user_id_row = cur.fetchone()
-    if user_id_row:
-        return user_id_row[0]
+    cur.execute("select cookie from catify.users where email = %s", (email,))
+    user_cookie_row = cur.fetchone()
+    if user_cookie_row:
+        return user_cookie_row[0]
     cur.execute("insert into catify.users (id, email, account_type, access_token,"
             " refresh_token, access_token_expiration, profile) values (default, %s,"
-            " %s, %s, %s, %s, %s) returning id", (email, account_type, access_token,
-                refresh_token, access_expiration, profile ))
-    user_id_row = cur.fetchone()
-    return user_id_row
+            " %s, %s, %s, %s, %s) returning cookie", (email, account_type, access_token,
+                refresh_token, access_expiration, Json(profile) ))
+    conn.commit()
+    user_cookie_row = cur.fetchone()
+    cur.close()
+    return user_cookie_row[0]
 
 
 
@@ -69,28 +88,33 @@ def spotify_request_tokens(code):
             auth = HTTPBasicAuth(SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET)
             )
     if resp.status_code == 200:
-        access = resp.json['access_token']
-        scope = resp.json['scope']
-        expires = arrow.now().shift(resp.json['expires_in'])
-        refresh = resp.json['refresh_token']
-        spotify_find_or_create_user(access, refresh, expires)
+        access = resp.json()['access_token']
+        scope = resp.json()['scope']
+        expires = arrow.now().shift(seconds=resp.json()['expires_in']).datetime
+        refresh = resp.json()['refresh_token']
+        user_cookie = spotify_find_or_create_user(access, refresh, expires)
+        return user_cookie
     else:
-        pass
-
+        return False 
 
 @app.route('/')
+@login_required
 def index():
+    return 'you are logged in boy'
 
-    requests.get('https://accounts.spotify.com/authorize',
-        params = {
-            'client_id': SPOTIFY_CLIENT_ID,
-            'response_type': 'code',
-            'redirect_uri': SPOTIFY_REDIRECT_URI,
-            'state': SPOTIFY_STATE,
-            'scope': ' '.join(SPOTIFY_API_SCOPES),
-            'show_dialog': 'false'
-            }
-        )
+@app.route('/spotify-login')
+def spotify_login():
+
+    params = {
+        'client_id': SPOTIFY_CLIENT_ID,
+        'response_type': 'code',
+        'redirect_uri': SPOTIFY_REDIRECT_URI,
+        'state': SPOTIFY_STATE,
+        'scope': ' '.join(SPOTIFY_API_SCOPES),
+        'show_dialog': 'false'
+        }
+    new_url = 'https://accounts.spotify.com/authorize?' + urllib.parse.urlencode(params)
+    return redirect(new_url, code=302)
 
 @app.route('/spotify')
 def spotify():
@@ -98,13 +122,13 @@ def spotify():
     state = request.args.get('state')
     error = request.args.get('error')
     if code is not None and state == SPOTIFY_STATE:
-        spotify_request_tokens(code)
-        pass
-    else:
-        # print error
-        pass
-
-    pass
+        cookie = spotify_request_tokens(code)
+        if cookie:
+            # result = make_response(render_template('index.html', foo=42))
+            result = make_response("you are logged in")
+            result.set_cookie('catify0', cookie)
+            return result
+    return 'you are not logged in'
 
 
 if __name__ == '__main__':
