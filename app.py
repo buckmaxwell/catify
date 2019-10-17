@@ -38,15 +38,24 @@ conn = psycopg2.connect(
         port=DB_PORT)
 
 
-def spotify_find_or_create_user(access_token):
+def spotify_find_or_create_user(access_token, refresh_token, access_expiration):
     resp = requests.get('https://api.spotify.com/v1/me',
             headers={'Authorization': 'Bearer {}'.format(
                 access_token)})
     email = resp.json['email']
     account_type = 'spotify'
+    profile = resp.json
     cur = conn.cursor()
-    # TODO: pick up here
-    cur.execute("select ...")
+    cur.execute("select id from catify.users where email = %s", (email,))
+    user_id_row = cur.fetchone()
+    if user_id_row:
+        return user_id_row[0]
+    cur.execute("insert into catify.users (id, email, account_type, access_token,"
+            " refresh_token, access_token_expiration, profile) values (default, %s,"
+            " %s, %s, %s, %s, %s) returning id", (email, account_type, access_token,
+                refresh_token, access_expiration, profile ))
+    user_id_row = cur.fetchone()
+    return user_id_row
 
 
 
@@ -64,7 +73,7 @@ def spotify_request_tokens(code):
         scope = resp.json['scope']
         expires = arrow.now().shift(resp.json['expires_in'])
         refresh = resp.json['refresh_token']
-        spotify_find_or_create_user(access_token)
+        spotify_find_or_create_user(access, refresh, expires)
     else:
         pass
 
