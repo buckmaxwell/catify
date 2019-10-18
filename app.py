@@ -1,13 +1,14 @@
-from flask import Flask, jsonify, request, redirect, make_response
+from flask import Flask, jsonify, request
+from flask import redirect, make_response, render_template
 from functools import wraps
 from psycopg2.extras import Json
 from requests.auth import HTTPBasicAuth
 import arrow
+import auth
 import os
 import psycopg2
 import requests
 import urllib
-import auth
 
 SPOTIFY_CLIENT_ID = os.environ['SPOTIFY_CLIENT_ID']
 SPOTIFY_CLIENT_SECRET = os.environ['SPOTIFY_CLIENT_SECRET']
@@ -105,7 +106,14 @@ def spotify_request_tokens(code):
 @app.route('/')
 @login_required
 def index():
-    return 'you are logged in boy'
+    return render_template('index.html')
+
+
+@app.route('/make-genre-playlists')
+@login_required
+def make_genre_playlists():
+    cookie = request.cookies.get('catify0')
+    genre_playlist.make_genre_playlists(conn, cookie)
 
 @app.route('/spotify-login')
 def spotify_login():
@@ -130,7 +138,7 @@ def spotify():
         cookie = spotify_request_tokens(code)
         if cookie:
             # result = make_response(render_template('index.html', foo=42))
-            result = make_response("you are logged in")
+            result = make_response(render_template('index.html'))
             result.set_cookie('catify0', cookie)
             return result
     return 'you are not logged in'
