@@ -16,7 +16,7 @@ def sync_tracks(authorizer, cookie):
                 "spotify_uri, spotify_duration_ms) select "
                 "%s, %s, %s, %s, %s, %s "
                 "where not exists (select spotify_id from catify.tracks "
-                "where spotify_id = %s ) returning id",
+                "where spotify_id = %s )",
                 (
                     track['track']['id'],
                     track['track']['name'],
@@ -26,6 +26,9 @@ def sync_tracks(authorizer, cookie):
                     track['track']['duration_ms'],
                     track['track']['id'],
                     ))
+            authorizer.conn.commit()
+            cur.execute("select id from catify.tracks where spotify_id "
+                    "= %s",(track['track']['id'],))
             track_id = cur.fetchone()[0]
             
             # like liked track if like not present
@@ -45,10 +48,12 @@ def sync_tracks(authorizer, cookie):
                 cur.execute("insert into catify.artists (spotify_id, "
                         "spotify_name, spotify_href, spotify_uri) select "
                         "%s, %s, %s, %s where not exists (select spotify_id "
-                        "from catify.artists where spotify_id = %s) "
-                        "returning id", (
+                        "from catify.artists where spotify_id = %s) " , (
                             artist['id'], artist['name'], artist['href'],
                             artist['uri'], artist['id'])) 
+                authorizer.conn.commit()
+                cur.execute("select id from catify.artists where spotify_id "
+                        "= %s",(artist['id'],))
                 artist_id = cur.fetchone()[0]
                 artist_ids.append(artist_id)
 
@@ -64,8 +69,6 @@ def sync_tracks(authorizer, cookie):
                             artist_id,
                             track_id,
                             ))
-            cur.close()
             authorizer.conn.commit()
-
+        cur.close()
         next_track_page = resp.json()['next']
-    cur.close()

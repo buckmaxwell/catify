@@ -30,16 +30,26 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/make-genre-playlists')
+@app.route('/make-genre-playlists', methods=['POST'])
 @login_required
 def make_genre_playlists():
     # TODO: do this async, return 204
     cookie = request.cookies.get('catify0')
+    #authorizer = auth.Authorizer()
+    #playlists.make_genre_playlists(authorizer, cookie)
+    #authorizer.close()
+    return 'genre playlists created'
+
+
+@app.route('/sync', methods=['POST'])
+@login_required
+def sync():
+    # TODO: do this async, return 204
+    cookie = request.cookies.get('catify0')
     authorizer = auth.Authorizer()
     syncer.sync_tracks(authorizer, cookie)
-    #playlists.make_genre_playlists(authorizer, cookie)
     authorizer.close()
-    return 'genre playlists created'
+    return redirect('/', code=302)
 
 
 @app.route('/spotify-login')
