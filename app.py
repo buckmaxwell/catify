@@ -3,7 +3,7 @@ from flask import Flask, jsonify, request
 from flask import redirect, make_response, render_template
 from functools import wraps
 import auth
-import genre_playlists
+import playlists
 import syncer
 import urllib
 
@@ -36,8 +36,8 @@ def make_genre_playlists():
     # TODO: do this async, return 204
     cookie = request.cookies.get('catify0')
     authorizer = auth.Authorizer()
-    syncer.sync_user_tracks(authorizer, cookie)
-    playlists.make_genre_playlists(authorizer, cookie)
+    syncer.sync_tracks(authorizer, cookie)
+    #playlists.make_genre_playlists(authorizer, cookie)
     authorizer.close()
     return 'genre playlists created'
 

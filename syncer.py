@@ -11,10 +11,10 @@ def sync_tracks(authorizer, cookie):
         for track in resp.json()['items']:
 
             # add liked track if not present
-            cur.execute("insert into catify.tracks (id, spotify_id, "
-                "spotify_name, sportify_href, spotify_explicit, "
-                "spotify_uri, spotify_duration_ms) values "
-                "(DEFAULT, %s, %s, %s, %s, %s, %s) "
+            cur.execute("insert into catify.tracks ( spotify_id, "
+                "spotify_name, spotify_href, spotify_explicit, "
+                "spotify_uri, spotify_duration_ms) select "
+                "%s, %s, %s, %s, %s, %s "
                 "where not exists (select spotify_id from catify.tracks "
                 "where spotify_id = %s ) returning id",
                 (
@@ -30,7 +30,7 @@ def sync_tracks(authorizer, cookie):
             
             # like liked track if like not present
             cur.execute("insert into catify.users_tracks (user_id,track_id,"
-                "relationship) values (%s, %s, 'SPOTIFY_LIKE') "
+                "relationship) select %s, %s, 'SPOTIFY_LIKE' "
                 "where not exists (select id from catify.users_tracks "
                 "where user_id = %s and track_id = %s)", (
                     user_id,
@@ -43,19 +43,19 @@ def sync_tracks(authorizer, cookie):
             artist_ids = []
             for artist in track['track']['artists']:
                 cur.execute("insert into catify.artists (spotify_id, "
-                        "spotify_name, spotify_href, spotify_uri) values ("
-                        "%s, %s, %s, %s) where not exists (select spotify_id "
+                        "spotify_name, spotify_href, spotify_uri) select "
+                        "%s, %s, %s, %s where not exists (select spotify_id "
                         "from catify.artists where spotify_id = %s) "
                         "returning id", (
                             artist['id'], artist['name'], artist['href'],
                             artist['uri'], artist['id'])) 
                 artist_id = cur.fetchone()[0]
-                artists_ids.append(artist_id)
+                artist_ids.append(artist_id)
 
             # link track to artists
             for artist_id in artist_ids:
                 cur.execute("insert into catify.artists_tracks (track_id, "
-                        "artist_id, relationship) values (%s, %s, 'HAS') "
+                        "artist_id, relationship) select %s, %s, 'HAS' "
                         "where not exists (select id from "
                         "catify.artists_tracks where artist_id = %s and "
                         "track_id = %s)", (

@@ -1,7 +1,5 @@
-import spotify_sender
-import auth
 
-def make_genre_playlists(conn, cookie):
+def make_genre_playlists(authorizer, cookie):
     # TODO
     pass
 

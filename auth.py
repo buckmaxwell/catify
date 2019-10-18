@@ -88,11 +88,11 @@ class Authorizer:
 
     def attempt_login_if_not_logged_in(self, cookie):
         # check if user exists
-        if user_exists(cookie) and user_loggedin(cookie):
+        if self.user_exists(cookie) and self.user_loggedin(cookie):
             return True
-        elif user_exists(cookie) and not user_loggedin(cookie):
-            return user_refresh(cookie)
-        elif not user_exists(cookie):
+        elif self.user_exists(cookie) and not self.user_loggedin(cookie):
+            return self.user_refresh(cookie)
+        elif not self.user_exists(cookie):
             return False
         # check if user is logged in
 
@@ -109,7 +109,7 @@ class Authorizer:
         email = resp.json()['email']
         account_type = 'spotify'
         profile = resp.json()
-        cur = conn.cursor()
+        cur = self.conn.cursor()
         cur.execute("select cookie from catify.users where email = %s", (email,))
         user_cookie_row = cur.fetchone()
 
@@ -119,7 +119,7 @@ class Authorizer:
                 " refresh_token, access_token_expiration, profile) = (%s,"
                 " %s, %s, %s)", ( access_token,
                     refresh_token, access_expiration, Json(profile) ))
-            conn.commit()
+            self.conn.commit()
             return user_cookie_row[0]
 
         # The user does not exist yet
@@ -127,7 +127,7 @@ class Authorizer:
                 " refresh_token, access_token_expiration, profile) values (default, %s,"
                 " %s, %s, %s, %s, %s) returning cookie", (email, account_type, access_token,
                     refresh_token, access_expiration, Json(profile) ))
-        conn.commit()
+        self.conn.commit()
         user_cookie_row = cur.fetchone()
         cur.close()
         return user_cookie_row[0]
