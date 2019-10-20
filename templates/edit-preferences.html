@@ -5,6 +5,8 @@
   <p>Here are some genres we found in your music. Select the one's you'd like us
   to maintain playlists for. You can change your preferences at any time.</p>
 
+  <a href='/'>Home</a>
+
   <form action="/preferences" method="post">
     {% for genre in preferences.get('genres',[]) %}
     {% if genre['selected'] %}

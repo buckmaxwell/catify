@@ -46,7 +46,11 @@ def edit_preferences():
 @app.route('/preferences', methods=['POST'])
 @login_required
 def update_prefences():
-    pass
+    authorizer = auth.Authorizer()
+    cookie = request.cookies.get('catify0')
+    selected_genres = request.form.getlist('genre')
+    preferences.select_genres(authorizer, cookie, selected_genres)
+    return redirect('/edit-preferences', code=302)
 
 
 

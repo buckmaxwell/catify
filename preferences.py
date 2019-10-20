@@ -63,3 +63,21 @@ def get_user_preferences(authorizer,cookie):
     return cur.fetchone()[0]
 
 
+def select_genres(authorizer, cookie, genres):
+    cur = authorizer.conn.cursor()
+    prefs = get_user_preferences(authorizer, cookie)
+    for genre in prefs['genres']:
+        if genre['name'] in genres:
+            genre['selected'] = True
+
+    cur.execute("""
+    update catify.users set preferences = %s where cookie = %s
+    """, (Json(prefs), cookie))
+    cur.close()
+    authorizer.conn.commit()
+
+
+
+
+
+
