@@ -1,7 +1,38 @@
-<form action="/make-genre-playlists" method="post">
-  <input type="submit" value="Make Genre Playlists">
-</form>
+<h1>Catify!</h1>
+
+<p>New here? We know it isn't pretty but this is it best free tool out there for
+creating genre based playlists in spotify.</p>
+
+<h4>To get started, you'll have to sync your spotify music.</h4>
+
+<p>This will sync your 'liked' tracks to your catify profile</p>
+
 <form action="/sync" method="post">
   <input type="submit" value="Sync Spotify">
 </form>
-<a href="/edit-preferences">Preferences</a>
+
+<h4>Now it's time to edit your preferences</h4>
+
+<p>By default, we won't make ANY genre playlists, so this is important.
+Check your favorite genres to make playlists for.</p>
+
+<form action="/edit-preferences" method="get">
+  <input type="submit" value="Edit Preferences">
+</form>
+
+<h4>Ready, set, go...</h4>
+
+<p>Time to click the magic button and get those playlists created. They
+will show up as something like "Catify's electronica" in your spotify.</p>
+
+<p>Change your preferences as needed, and click this button whenver you like
+Whenever you add new songs to Spotify, you'll want to sync again.</p>
+
+<form action="/make-genre-playlists" method="post">
+  <input type="submit" value="Make Genre Playlists">
+</form>
+
+
+<hr>
+
+
