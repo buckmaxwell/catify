@@ -4,6 +4,7 @@ from flask import redirect, make_response, render_template
 from functools import wraps
 import auth
 import playlists
+import preferences
 import syncer
 import urllib
 
@@ -28,6 +29,25 @@ def login_required(f):
 @login_required
 def index():
     return render_template('index.html')
+
+
+@app.route('/edit-preferences')
+@login_required
+def edit_preferences():
+    authorizer = auth.Authorizer()
+    cookie = request.cookies.get('catify0')
+
+    preferences.add_new_possible_playlists(authorizer, cookie)
+    preferences = preferences.get_user_preferences(authorizer,cookie)
+    authorizer.close()
+
+    return render_template('edit-preferences.html', preferences)
+
+@app.route('/preferences', method=['POST'])
+@login_required
+def update_prefences():
+    pass
+
 
 
 @app.route('/make-genre-playlists', methods=['POST'])
