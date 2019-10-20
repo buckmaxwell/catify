@@ -50,6 +50,7 @@ def update_prefences():
     cookie = request.cookies.get('catify0')
     selected_genres = request.form.getlist('genre')
     preferences.select_genres(authorizer, cookie, selected_genres)
+    authorizer.close()
     return redirect('/edit-preferences', code=302)
 
 
@@ -58,10 +59,11 @@ def update_prefences():
 @login_required
 def make_genre_playlists():
     # TODO: do this async, return 204
+    authorizer = auth.Authorizer()
     cookie = request.cookies.get('catify0')
-    #authorizer = auth.Authorizer()
-    #playlists.make_genre_playlists(authorizer, cookie)
-    #authorizer.close()
+
+    playlists.make_genre_playlists(authorizer, cookie)
+    authorizer.close()
     return 'genre playlists created'
 
 

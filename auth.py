@@ -161,5 +161,14 @@ class Authorizer:
                     access_token)})
         return resp
 
+    def authorized_post_request(self, url, cookie, body_dict={}):
+        self.attempt_login_if_not_logged_in(cookie)
+        access_token = self.get_access_token(cookie)
+        resp = requests.post(url, 
+                headers={'Authorization': 'Bearer {}'.format(
+                    access_token)},
+                json=body_dict)
+        return resp
+
 
 
