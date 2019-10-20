@@ -43,6 +43,7 @@ def edit_preferences():
 
     return render_template('edit-preferences.html', preferences=prefs)
 
+
 @app.route('/preferences', methods=['POST'])
 @login_required
 def update_prefences():
