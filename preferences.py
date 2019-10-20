@@ -7,7 +7,7 @@ def add_new_possible_playlists(authorizer, cookie):
     cur.execute("""
     select preferences from catify.users u where u.cookie = %s
     """, (cookie,))
-    old_preferences = cur.fetchone()
+    old_preferences = cur.fetchone()[0]
 
     cur.execute("""
     select * from (
@@ -49,10 +49,10 @@ def add_new_possible_playlists(authorizer, cookie):
         })
 
     cur.execute("""
-    update catify.users u set u.preferences = %s where u.cookie = %s
+    update catify.users set preferences = %s where cookie = %s
     """, (Json(new_preferences), cookie))
     cur.close()
-    authorization.conn.commit()
+    authorizer.conn.commit()
 
     
 def get_user_preferences(authorizer,cookie):

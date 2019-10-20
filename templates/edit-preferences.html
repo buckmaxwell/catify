@@ -1,1 +1,21 @@
-<h1>TODO, display preferences form</h1>
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>Preferences</h1>
+  <p>Here are some genres we found in your music. Select the one's you'd like us
+  to maintain playlists for. You can change your preferences at any time.</p>
+
+  <form action="/preferences" method="post">
+    {% for genre in preferences.get('genres',[]) %}
+    {% if genre['selected'] %}
+    <input type="checkbox" name="genre" value="{{ genre['name'] }}" checked> {{ genre['name'] }} <br>
+    {% else %}
+    <input type="checkbox" name="genre" value="{{ genre['name'] }}" > {{ genre['name'] }} <br>
+    {% endif %}
+    {% endfor %}
+    <input type="submit" value="Save">
+  </form>
+
+</body>
+</html>
+

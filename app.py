@@ -38,12 +38,12 @@ def edit_preferences():
     cookie = request.cookies.get('catify0')
 
     preferences.add_new_possible_playlists(authorizer, cookie)
-    preferences = preferences.get_user_preferences(authorizer,cookie)
+    prefs = preferences.get_user_preferences(authorizer,cookie)
     authorizer.close()
 
-    return render_template('edit-preferences.html', preferences)
+    return render_template('edit-preferences.html', preferences=prefs)
 
-@app.route('/preferences', method=['POST'])
+@app.route('/preferences', methods=['POST'])
 @login_required
 def update_prefences():
     pass
