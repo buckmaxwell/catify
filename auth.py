@@ -117,8 +117,9 @@ class Authorizer:
         if user_cookie_row:
             cur.execute("update catify.users set ( access_token,"
                 " refresh_token, access_token_expiration, profile) = (%s,"
-                " %s, %s, %s)", ( access_token,
-                    refresh_token, access_expiration, Json(profile) ))
+                " %s, %s, %s) where email = %s", ( access_token,
+                    refresh_token, access_expiration, Json(profile),
+                    email))
             self.conn.commit()
             return user_cookie_row[0]
 
