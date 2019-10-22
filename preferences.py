@@ -69,6 +69,9 @@ def select_genres(authorizer, cookie, genres):
     for genre in prefs['genres']:
         if genre['name'] in genres:
             genre['selected'] = True
+        else:
+            genre['selected'] = False
+
 
     cur.execute("""
     update catify.users set preferences = %s where cookie = %s
