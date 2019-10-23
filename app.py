@@ -2,7 +2,7 @@ from const import *
 from flask import Flask, jsonify, request
 from flask import redirect, make_response, render_template
 from functools import wraps
-import auth
+import authorizer as auth
 import playlists
 import preferences
 import syncer
