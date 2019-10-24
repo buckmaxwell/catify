@@ -154,7 +154,12 @@ class Authorizer:
                 return cookie
         return False 
 
-    def authorized_request(self, url, cookie):
+    def authorized_request(self, url, cookie=None):
+        if not cookie:
+            resp = requests.get(url,
+                    auth=HTTPBasicAuth(SPOTIFY_CLIENT_ID,
+                        SPOTIFY_CLIENT_SECRET))
+            return resp
         self.attempt_login_if_not_logged_in(cookie)
         access_token = self.get_access_token(cookie)
         resp = requests.get(url, 

@@ -10,9 +10,9 @@ def get_artists():
     auth = authorizer.Authorizer()
     cur = auth.conn.cursor()
     cur.execute("""
-        select spotify_id from catify.artists order by random() limit 10;
+        select spotify_id from catify.artists order by random() limit 50;
     """)
-    return [x[0] for x in cur]
+    return ','.join([x[0] for x in cur])
 
 
 if __name__ == '__main__':
