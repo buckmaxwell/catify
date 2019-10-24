@@ -9,9 +9,9 @@ def link_genres_to_artist(spotify_artist_id, genres_list):
     cur = auth.conn.cursor()
     # Add genres if they don't exist
     for genre_name in genres_list:
-        cur.execute("""insert into catify.genres (name) values
+        cur.execute("""insert into catify.genres (name) select
         %s where not exists ( select name from catify.genres
-        where name = %s""", (genre_name, genre_name))
+        where name = %s)""", (genre_name, genre_name))
     auth.conn.commit()
 
     # Link artists to genre
@@ -41,13 +41,14 @@ def update_artists(artist_dict):
 
 def handle_message(ch, method, properties, body):
     # artist spotify ids (comma separated)
-    spotify_ids = body
+    spotify_ids = body.decode("utf-8")
+    url = 'https://api.spotify.com/v1/artists?ids={}'.format(
+            spotify_ids)
+
     resp = auth.authorized_request(
             'https://api.spotify.com/v1/artists?ids={}'.format(
-                (spotify_ids,)))
+                spotify_ids))
 
-    print(resp.text)
-    print(resp.json())
     for artist in resp.json()['artists']:
         link_genres_to_artist(artist['id'], artist['genres'])
         update_artists(artist)

@@ -184,7 +184,7 @@ class Authorizer:
         if row:
             return row[0]
         else:
-            return get_bearer_helper()
+            return self.get_bearer_helper()
 
     def authorized_request(self, url, cookie=None):
         if not cookie:
