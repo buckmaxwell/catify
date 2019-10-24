@@ -1,9 +1,6 @@
-
-# strategy -- pull artists randomly and add to the queue.
-
+from time import sleep
 import authorizer
 import pika
-
 
 
 def get_artists():
@@ -12,7 +9,9 @@ def get_artists():
     cur.execute("""
         select spotify_id from catify.artists order by random() limit 50;
     """)
-    return ','.join([x[0] for x in cur])
+    result = ','.join([x[0] for x in cur])
+    cur.close()
+    return result
 
 
 if __name__ == '__main__':
@@ -21,8 +20,10 @@ if __name__ == '__main__':
     channel = connection.channel()
     channel.basic_qos(prefetch_count=1)
 
-    q = channel.queue_declare(queue='artist_genres')
-    for artist_id in get_artists():
+    while True:
+        q = channel.queue_declare(queue='artist_genres')
+        artist_ids =  get_artists()
         channel.basic_publish(exchange='', routing_key='artist_genres',
-                body=artist_id)
+                body=artist_ids)
+        sleep(5*60)
 

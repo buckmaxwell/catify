@@ -154,14 +154,44 @@ class Authorizer:
                 return cookie
         return False 
 
+
+    def get_bearer_helper(self):
+        resp = requests.post('https://accounts.spotify.com/api/token',
+                data = { 'grant_type':'client_credentials' },
+                auth = HTTPBasicAuth(SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET)
+                )
+        access = resp.json()['access_token']
+        expires = arrow.now().shift(seconds=resp.json()['expires_in']).datetime
+        cur = self.conn.cursor()
+        cur.execute("""select id from catify.bearer where id = 1""")
+        if cur.fetchone():
+            cur.execute("""update catify.bearer set (bearer, expiration) =
+            (%s,%s) where id = 1""", (access, expires)) 
+        else:
+            cur.execute("""insert into catify.bearer (id, bearer, expiration)
+            values (1, %s,%s)""", (access, expires)) 
+
+        self.conn.commit()
+        cur.close()
+        return access
+
+
+    def get_bearer(self):
+        cur = self.conn.cursor()
+        cur.execute("""select bearer,expiration from catify.bearer where id = 1
+                and expiration > current_timestamp""")
+        row = cur.fetchone()
+        if row:
+            return row[0]
+        else:
+            return get_bearer_helper()
+
     def authorized_request(self, url, cookie=None):
         if not cookie:
-            resp = requests.get(url,
-                    auth=HTTPBasicAuth(SPOTIFY_CLIENT_ID,
-                        SPOTIFY_CLIENT_SECRET))
-            return resp
-        self.attempt_login_if_not_logged_in(cookie)
-        access_token = self.get_access_token(cookie)
+            access_token = self.get_bearer()
+        else:
+            self.attempt_login_if_not_logged_in(cookie)
+            access_token = self.get_access_token(cookie)
         resp = requests.get(url, 
                 headers={'Authorization': 'Bearer {}'.format(
                     access_token)})

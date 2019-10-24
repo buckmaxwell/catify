@@ -1,7 +1,8 @@
 import authorizer
+import pika
 
 
-auth = authorizer.Auth()
+auth = authorizer.Authorizer()
 
 
 def link_genres_to_artist(spotify_artist_id, genres_list):
@@ -22,8 +23,9 @@ def link_genres_to_artist(spotify_artist_id, genres_list):
         cur.execute("""select id from catify.genres where name = %s""",
                 (genre_name,))
         genre_id = cur.fetchone()[0]
-        cur.execute("""insert into catify.artists_genres (artist_id, genre_id)
-        values (%s,%s)""", (artist_id, genre_id))
+        cur.execute("""insert into catify.artists_genres (artist_id, genre_id,
+        relationship)
+        values (%s,%s,%s)""", (artist_id, genre_id,'IN'))
     auth.conn.commit()
     cur.close()
 
@@ -40,8 +42,12 @@ def update_artists(artist_dict):
 def handle_message(ch, method, properties, body):
     # artist spotify ids (comma separated)
     spotify_ids = body
-    resp = auth.authorized_request('https://api.spotify.com/v1/artists',
-            params={'ids': spotify_ids})
+    resp = auth.authorized_request(
+            'https://api.spotify.com/v1/artists?ids={}'.format(
+                (spotify_ids,)))
+
+    print(resp.text)
+    print(resp.json())
     for artist in resp.json()['artists']:
         link_genres_to_artist(artist['id'], artist['genres'])
         update_artists(artist)
@@ -56,7 +62,7 @@ if __name__ == '__main__':
     channel.queue_declare(queue='artist_genres')
     channel.basic_qos(prefetch_count=1)
 
-    channel.basic_consume(handle_message, queue='artist_genres', no_ack=False)
+    channel.basic_consume('artist_genres', handle_message, auto_ack=False)
 
     channel.start_consuming()
     main()
