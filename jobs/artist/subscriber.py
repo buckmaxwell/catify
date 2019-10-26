@@ -32,7 +32,8 @@ def link_genres_to_artist(spotify_artist_id, genres_list):
 
 def update_artists(artist_dict):
     cur = auth.conn.cursor()
-    cur.execute("""update catify.artists set popularity = %s
+    cur.execute("""update catify.artists set (popularity,genres_updated_at)
+    = (%s,current_timestamp)
     where spotify_id = %s""", (artist_dict['popularity'],
         artist_dict['id']))
     auth.conn.commit()
@@ -42,12 +43,17 @@ def update_artists(artist_dict):
 def handle_message(ch, method, properties, body):
     # artist spotify ids (comma separated)
     spotify_ids = body.decode("utf-8")
+    if spotify_ids == '':
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        return
+
     url = 'https://api.spotify.com/v1/artists?ids={}'.format(
             spotify_ids)
 
     resp = auth.authorized_request(
             'https://api.spotify.com/v1/artists?ids={}'.format(
                 spotify_ids))
+
 
     for artist in resp.json()['artists']:
         link_genres_to_artist(artist['id'], artist['genres'])

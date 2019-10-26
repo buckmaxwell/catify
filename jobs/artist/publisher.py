@@ -7,7 +7,12 @@ def get_artists():
     auth = authorizer.Authorizer()
     cur = auth.conn.cursor()
     cur.execute("""
-        select spotify_id from catify.artists order by random() limit 50;
+        select spotify_id from catify.artists
+
+        where genres_updated_at < (current_timestamp - interval '12 hours')
+        order by genres_updated_at
+
+        limit 50;
     """)
     result = ','.join([x[0] for x in cur])
     cur.close()
@@ -23,8 +28,8 @@ if __name__ == '__main__':
     while True:
         q = channel.queue_declare(queue='artist_genres')
         artist_ids =  get_artists()
-        channel.basic_publish(exchange='', routing_key='artist_genres',
+        if artist_ids != '':
+            channel.basic_publish(exchange='', routing_key='artist_genres',
                 body=artist_ids)
-        #sleep(5*60)
         sleep(10)
 

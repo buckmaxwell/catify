@@ -11,8 +11,9 @@ def add_audio_features_to_track(spotify_track_ids, audio_features_list):
     
     for i,audio_features in enumerate(audio_features_list):
 
-        cur.execute("""update catify.tracks set spotify_audio_features = %s
-        where spotify_id = %s""",(Json(audio_features),
+        cur.execute("""update catify.tracks set
+        (spotify_audio_features,audio_features_updated_at) = (%s,
+        current_timestamp) where spotify_id = %s""",(Json(audio_features),
             spotify_track_ids[i]))
 
     auth.conn.commit()
@@ -23,6 +24,10 @@ def add_audio_features_to_track(spotify_track_ids, audio_features_list):
 def handle_message(ch, method, properties, body):
     # track spotify ids (comma separated)
     spotify_ids = body.decode("utf-8")
+
+    if spotify_ids == '':
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        return
 
     resp = auth.authorized_request(
             'https://api.spotify.com/v1/audio-features?ids={}'.format(
