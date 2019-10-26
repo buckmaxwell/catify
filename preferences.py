@@ -10,23 +10,17 @@ def add_new_possible_playlists(authorizer, cookie):
     old_preferences = cur.fetchone()[0]
 
     cur.execute("""
-    select * from (
-    select tag_name, count(*) cnt from (select distinct m_tag.name tag_name, c_track.spotify_name
-       from musicbrainz.recording m_track
+    select * from (select distinct genres.name, count(*) cnt from catify.users
+        join catify.users_tracks ON users_tracks.user_id = users.id
+        join catify.artists_tracks on users_tracks.track_id  = artists_tracks.track_id
+        join catify.artists_genres on artists_genres.artist_id = artists_tracks.artist_id
+        join catify.genres on genres.id = artists_genres.genre_id
 
-       join catify.tracks c_track on m_track.name = c_track.spotify_name
-       join catify.artists_tracks c_artist_track on c_track.id = c_artist_track.track_id
-       join catify.artists c_artist on c_artist.id = c_artist_track.artist_id
-       join catify.users_tracks c_user_track on c_user_track.track_id = c_track.id
-
-       join musicbrainz.artist m_artist on c_artist.spotify_name = m_artist.name
-       join musicbrainz.artist_tag m_artist_tag on m_artist_tag.artist = m_artist.id
-       join musicbrainz.tag m_tag on m_artist_tag.tag = m_tag.id
-
-       where m_artist.name ~* concat('\m',c_artist.spotify_name,'\M')
-       and c_user_track.user_id = (
-        select id from catify.users c_users where c_users.cookie = %s
-       )) tab1 group by tag_name order by cnt desc) tab2 where cnt > 9 limit 500;
+        where users.cookie = %s
+        group by genres.name
+        ) tab1
+        
+        where cnt > 9 order by cnt desc;
     """,(cookie,))
 
     old_genre_hash =  {}
