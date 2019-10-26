@@ -19,16 +19,6 @@ def make_genre_playlists(authorizer, cookie):
                     user_id, genre['name']) 
             genre['spotify_playlist_id'] = resp.json()['id']
 
-    # Create new playlists
-    #created_playlists = []
-    #for pl_name in playlists_to_create:
-    #    resp = create_playlist(authorizer, cookie, user_id, pl_name) 
-    #    created_playlists.append(resp.json()['id'])
-
-    # Update playlist ids in preferences
-    #for i, genre in enumerate(genres):
-    #    if genre['selected'] and not genre.get('spotify_playlist_id'):
-    #        genre['spotify_playlist_id'] = playlists_to_create[i]
     new_preferences = preferences
     preferences['genres'] = genres
     cur.execute("""
