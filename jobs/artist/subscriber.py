@@ -25,7 +25,13 @@ def link_genres_to_artist(spotify_artist_id, genres_list):
         genre_id = cur.fetchone()[0]
         cur.execute("""insert into catify.artists_genres (artist_id, genre_id,
         relationship)
-        values (%s,%s,%s)""", (artist_id, genre_id,'IN'))
+
+        select %s,%s,'IN'
+
+        where not exists (select * from catify.artists_genres
+        where artist_id = %s
+        and genre_id = %s)
+        """, (artist_id, genre_id,artist_id, genre_id))
     auth.conn.commit()
     cur.close()
 
