@@ -60,12 +60,11 @@ def get_track_ids_for_genre(authorizer, cookie, genre_name):
         join catify.artists_tracks c_artist_track on c_artist_track.track_id = c_track.id
         join catify.artists c_artist on c_artist.id = c_artist_track.artist_id
 
-        join musicbrainz.artist m_artist on c_artist.spotify_name = m_artist.name
-        join musicbrainz.artist_tag m_artist_tag on m_artist_tag.artist = m_artist.id
-        join musicbrainz.tag m_tag on m_artist_tag.tag = m_tag.id
+        join catify.artists_genres c_artist_genre on c_artist.id = c_artist_genre.artist_id
+        join catify.genres c_genre on c_genre.id = c_artist_genre.genre_id
 
         where c_user.cookie = %s 
-        and m_tag.name = %s
+        and c_genre.name = %s
     """, (cookie, genre_name))
     result = [r[0] for r in cur]
     cur.close()
