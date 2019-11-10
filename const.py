@@ -4,7 +4,7 @@ import os
 SPOTIFY_CLIENT_ID = os.environ['SPOTIFY_CLIENT_ID']
 SPOTIFY_CLIENT_SECRET = os.environ['SPOTIFY_CLIENT_SECRET']
 SPOTIFY_STATE = 'prevent_cross_site_request_forgery55'
-SPOTIFY_REDIRECT_URI = 'http://earbud.club/spotify'
+SPOTIFY_REDIRECT_URI = os.environ.get('SPOTIFY_REDIRECT_URI', 'http://earbud.club/spotify')
 DB_NAME = os.environ['DB_NAME']
 DB_USER = os.environ['DB_USER']
 DB_PASS = os.environ['DB_PASS']

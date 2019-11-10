@@ -31,5 +31,5 @@ if __name__ == '__main__':
         if artist_ids != '':
             channel.basic_publish(exchange='', routing_key='artist_genres',
                 body=artist_ids)
-        sleep(10)
+        sleep(0.25)
 

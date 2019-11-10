@@ -99,6 +99,7 @@ def spotify():
     code = request.args.get('code')
     state = request.args.get('state')
     error = request.args.get('error')
+    print("Code: {}, State: {}, Error: {}".format(code, state, error))
     if code is not None and state == SPOTIFY_STATE:
         authorizer = auth.Authorizer()
         cookie = authorizer.spotify_find_or_create_user(code)
@@ -111,5 +112,5 @@ def spotify():
 
 
 if __name__ == '__main__':
-    #app.run(host='0.0.0.0', port=5000, debug=True)
-    serve(app, host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
+    #serve(app, host='0.0.0.0', port=5000)

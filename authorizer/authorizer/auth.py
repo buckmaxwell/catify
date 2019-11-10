@@ -135,6 +135,7 @@ class Authorizer:
 
     def spotify_find_or_create_user(self, code):
         """Returns cookie, or false"""
+        print("can u find me")
 
         resp = requests.post('https://accounts.spotify.com/api/token',
                 data = {

@@ -29,5 +29,5 @@ if __name__ == '__main__':
         if artist_ids != '':
             channel.basic_publish(exchange='', routing_key='track_audio_features',
                 body=artist_ids)
-        sleep(10)
+        sleep(.25)
 
